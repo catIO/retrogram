@@ -1,11 +1,12 @@
 import React from 'react';
-import { X } from 'lucide-react';
+import { X, LogOut } from 'lucide-react';
 
 interface SettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
   isDark: boolean;
   onToggleTheme: () => void;
+  onLogout: () => void;
 }
 
 const SettingsModal: React.FC<SettingsModalProps> = ({
@@ -13,6 +14,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
   onClose,
   isDark,
   onToggleTheme,
+  onLogout,
 }) => {
   if (!isOpen) return null;
 
@@ -50,6 +52,15 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                   isDark ? 'translate-x-6' : 'translate-x-1'
                 }`}
               />
+            </button>
+          </div>
+          <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+            <button
+              onClick={onLogout}
+              className="flex items-center justify-center w-full px-4 py-2 text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition-colors"
+            >
+              <LogOut className="w-5 h-5 mr-2" />
+              Logout
             </button>
           </div>
         </div>

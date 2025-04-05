@@ -11,6 +11,7 @@ import { uploadImage, deleteImage } from './services/imageService';
 import { client } from './config/sanity';
 import { urlFor } from './utils/imageUrl';
 import { useAuth } from './contexts/AuthContext';
+import ImageModal from './components/ImageModal';
 
 interface SanityPhoto {
   _id: string;
@@ -43,6 +44,8 @@ const App: React.FC = () => {
     return false;
   });
   const [error, setError] = useState<string | null>(null);
+  const [currentImageIndex, setCurrentImageIndex] = useState<number>(-1);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   useEffect(() => {
     if (isDark) {
@@ -125,6 +128,24 @@ const App: React.FC = () => {
     }
   };
 
+  const handleImageClick = (imageUrl: string) => {
+    const index = images.findIndex(img => img.url === imageUrl);
+    setCurrentImageIndex(index);
+    setSelectedImage(imageUrl);
+  };
+
+  const handleNavigate = (direction: 'next' | 'prev') => {
+    if (direction === 'next' && currentImageIndex < images.length - 1) {
+      const nextImage = images[currentImageIndex + 1];
+      setSelectedImage(nextImage.url);
+      setCurrentImageIndex(currentImageIndex + 1);
+    } else if (direction === 'prev' && currentImageIndex > 0) {
+      const prevImage = images[currentImageIndex - 1];
+      setSelectedImage(prevImage.url);
+      setCurrentImageIndex(currentImageIndex - 1);
+    }
+  };
+
   if (error) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
@@ -178,18 +199,11 @@ const App: React.FC = () => {
                       </div>
                     </div>
                   </ImageUploader>
-                  <button
-                    onClick={logout}
-                    className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                    aria-label="Logout"
-                  >
-                    <LogOut className="w-6 h-6" />
-                  </button>
                 </>
               ) : (
                 <button
                   onClick={() => setShowLogin(true)}
-                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                  className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
                 >
                   Login
                 </button>
@@ -199,25 +213,40 @@ const App: React.FC = () => {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24">
-        <ImageGrid
-          images={images}
+      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8 mt-20">
+        <ImageGrid 
+          images={images} 
           onDelete={handleImageDelete}
-          isDeleting={isDeleting}
+          onImageClick={handleImageClick}
         />
       </main>
+
+      <LoginModal
+        isOpen={showLogin}
+        onClose={() => setShowLogin(false)}
+      />
 
       <SettingsModal
         isOpen={showSettings}
         onClose={() => setShowSettings(false)}
         isDark={isDark}
         onToggleTheme={() => setIsDark(!isDark)}
+        onLogout={logout}
       />
 
-      <LoginModal
-        isOpen={showLogin}
-        onClose={() => setShowLogin(false)}
-      />
+      {selectedImage && (
+        <ImageModal
+          imageUrl={selectedImage}
+          onClose={() => {
+            setSelectedImage(null);
+            setCurrentImageIndex(-1);
+          }}
+          onDelete={() => handleImageDelete(selectedImage)}
+          onNavigate={handleNavigate}
+          hasNext={currentImageIndex < images.length - 1}
+          hasPrev={currentImageIndex > 0}
+        />
+      )}
     </div>
   );
 };

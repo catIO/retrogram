@@ -6,8 +6,8 @@ import { useAuth } from '../contexts/AuthContext';
 
 interface ImageGridProps {
   images: ImageData[];
-  onDelete: (imageUrl: string) => Promise<void>;
-  isDeleting: boolean;
+  onDelete: (imageUrl: string) => void;
+  onImageClick: (imageUrl: string) => void;
 }
 
 interface SanityPhoto {
@@ -25,7 +25,7 @@ interface SanityPhoto {
   };
 }
 
-const ImageGrid: React.FC<ImageGridProps> = ({ images, onDelete, isDeleting }) => {
+const ImageGrid: React.FC<ImageGridProps> = ({ images, onDelete, onImageClick }) => {
   const { isAuthenticated } = useAuth();
   const [selectedImage, setSelectedImage] = React.useState<string | null>(null);
   const [sanityPhotos, setSanityPhotos] = useState<SanityPhoto[]>([]);
@@ -98,49 +98,27 @@ const ImageGrid: React.FC<ImageGridProps> = ({ images, onDelete, isDeleting }) =
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
-      {images.map((image, index) => {
-        // Find the corresponding Sanity photo to get the crop data
-        const sanityPhoto = sanityPhotos.find(photo => {
-          if (!photo.image?.asset?._ref) {
-            console.error('Photo missing image asset reference:', photo);
-            return false;
-          }
-          const assetId = photo.image.asset._ref.split('-')[1];
-          return image.url.includes(assetId);
-        });
-
-        // Use the crop data from Sanity if available, otherwise use the local crop data
-        const cropData = sanityPhoto?.crop || image.crop || { x: 0, y: 0, width: 0, height: 0 };
-        console.log('Crop data for image:', cropData);
-
-        return (
-          <div key={index} className="relative group bg-white dark:bg-gray-800 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-            <div 
-              className="w-full aspect-square overflow-hidden cursor-pointer"
-              onClick={() => handleImageClick(image.url)}
-            >
-              <div className="relative w-full h-full overflow-hidden">
-                <img
-                  src={image.url}
-                  alt={`Uploaded image ${index + 1}`}
-                  className="absolute w-full h-full object-cover"
-                  style={{
-                    objectPosition: `${(cropData.x / image.originalWidth) * 100}% ${(cropData.y / image.originalHeight) * 100}%`,
-                    width: `${(cropData.width / image.originalWidth) * 100}%`,
-                    height: `${(cropData.height / image.originalHeight) * 100}%`,
-                    transform: `scale(${image.scale})`,
-                    transformOrigin: 'top left'
-                  }}
-                  onError={(e) => {
-                    console.error('Error loading image:', image.url);
-                    setError('Failed to load one or more images');
-                  }}
-                />
-              </div>
-            </div>
+      {images.map((image) => (
+        <div key={image.url} className="relative group">
+          <div 
+            className="aspect-square overflow-hidden rounded-lg cursor-pointer"
+            onClick={() => onImageClick(image.url)}
+          >
+            <img
+              src={image.url}
+              alt=""
+              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+              style={{
+                objectPosition: `${(image.crop.x / image.originalWidth) * 100}% ${(image.crop.y / image.originalHeight) * 100}%`,
+                width: `${(image.crop.width / image.originalWidth) * 100}%`,
+                height: `${(image.crop.height / image.originalHeight) * 100}%`,
+                transform: `scale(${image.scale})`,
+                transformOrigin: 'top left'
+              }}
+            />
           </div>
-        );
-      })}
+        </div>
+      ))}
 
       {selectedImage && selectedImageData && (
         <div 
@@ -170,7 +148,6 @@ const ImageGrid: React.FC<ImageGridProps> = ({ images, onDelete, isDeleting }) =
                     }}
                     className="text-white hover:text-red-400 p-2 rounded-full bg-black bg-opacity-50 hover:bg-opacity-75 transition-colors"
                     aria-label="Delete image"
-                    disabled={isDeleting}
                   >
                     <Trash2 className="w-6 h-6" />
                   </button>
