@@ -158,6 +158,15 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ children, onImageUpload, 
     onToggleGrid();
   };
 
+  const handleCloseModal = () => {
+    setShowCropModal(false);
+    setSelectedImage(null);
+    setSelectedFile(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   const handleUpload = async () => {
     if (!selectedFile || !crop || !imgRef.current) return;
 
@@ -237,12 +246,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ children, onImageUpload, 
       await onImageUpload();
       
       // Reset the state
-      setShowCropModal(false);
-      setSelectedImage(null);
-      setSelectedFile(null);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
+      handleCloseModal();
     } catch (error) {
       console.error('Error uploading image:', error);
     } finally {
@@ -263,16 +267,21 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ children, onImageUpload, 
         {children}
       </div>
       {showCropModal && selectedImage && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              handleCloseModal();
+            }
+          }}
+        >
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6 w-full max-w-4xl my-4 sm:my-8">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Crop Image</h2>
               <button
-                onClick={() => {
-                  setShowCropModal(false);
-                  setSelectedImage(null);
-                }}
-                className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                onClick={handleCloseModal}
+                className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                aria-label="Close modal"
               >
                 <X className="w-6 h-6" />
               </button>
@@ -320,17 +329,16 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ children, onImageUpload, 
                 </button>
                 <button
                   onClick={toggleGrid}
-                  className={`p-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors ${showGrid ? 'bg-gray-100 dark:bg-gray-700' : ''}`}
+                  className={`p-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors ${
+                    showGrid ? 'bg-gray-100 dark:bg-gray-700' : ''
+                  }`}
                 >
                   <Grid className="w-5 h-5" />
                 </button>
               </div>
               <div className="flex flex-wrap justify-center sm:justify-end gap-2 mt-2 sm:mt-0">
                 <button
-                  onClick={() => {
-                    setShowCropModal(false);
-                    setSelectedImage(null);
-                  }}
+                  onClick={handleCloseModal}
                   className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
                 >
                   Cancel

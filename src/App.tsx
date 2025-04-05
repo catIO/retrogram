@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { ImageIcon, Upload, Grid as GridIcon, List as ListIcon } from 'lucide-react';
+import { Settings } from 'lucide-react';
+import MonochromePhotosIcon from '@mui/icons-material/MonochromePhotos';
+import AddAPhotoIcon from '@mui/icons-material/AddAPhoto';
 import ImageUploader from './components/ImageUploader';
 import ImageGrid from './components/ImageGrid';
+import SettingsModal from './components/SettingsModal';
 import { ImageData } from './components/ImageUploader';
 import { uploadImage, deleteImage } from './services/imageService';
 import { client } from './config/sanity';
@@ -26,6 +29,7 @@ const App: React.FC = () => {
   const [images, setImages] = useState<ImageData[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [showGrid, setShowGrid] = useState(true);
   const [isDark, setIsDark] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -88,13 +92,21 @@ const App: React.FC = () => {
     }
   };
 
-  const handleImageDelete = async (imageUrl: string, index: number) => {
+  const handleImageDelete = async (imageUrl: string) => {
+    console.log('Starting delete process in App for URL:', imageUrl);
     setIsDeleting(true);
     try {
       await deleteImage(imageUrl);
+      console.log('Image deleted successfully, refreshing images...');
       await fetchImages();
+      console.log('Images refreshed successfully');
     } catch (error) {
-      console.error('Error deleting image:', error);
+      console.error('Error in handleImageDelete:', error);
+      if (error instanceof Error) {
+        console.error('Error message:', error.message);
+        console.error('Error stack:', error.stack);
+      }
+      setError('Failed to delete image. Please try again.');
     } finally {
       setIsDeleting(false);
     }
@@ -120,43 +132,56 @@ const App: React.FC = () => {
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
       <header className="fixed top-0 left-0 right-0 bg-white dark:bg-gray-800 shadow-sm z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+          <div className="flex justify-between items-center h-20">
             <div className="flex items-center">
-              <ImageIcon className="w-8 h-8 text-blue-500" />
-              <h1 className="ml-2 text-xl font-semibold text-gray-900 dark:text-white">PhotoGrid</h1>
+              <MonochromePhotosIcon sx={{ fontSize: 40 }} className="text-[#a12525]" />
+              <h1 className="ml-3 text-2xl font-playfair italic font-semibold text-gray-900 dark:text-white">Retrogram</h1>
             </div>
             <div className="flex items-center space-x-4">
               <button
-                onClick={() => setShowGrid(!showGrid)}
+                onClick={() => setShowSettings(true)}
                 className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                aria-label="Open settings"
               >
-                {showGrid ? <GridIcon className="w-6 h-6" /> : <ListIcon className="w-6 h-6" />}
+                <Settings className="w-6 h-6" />
               </button>
               <ImageUploader
                 onImageUpload={handleImageUpload}
                 showGrid={showGrid}
                 onToggleGrid={() => setShowGrid(!showGrid)}
               >
-                <button
-                  disabled={isUploading}
-                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
-                >
-                  {isUploading ? 'Uploading...' : 'Upload Photo'}
-                </button>
+                <div className="relative group">
+                  <button
+                    disabled={isUploading}
+                    className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 disabled:opacity-50"
+                    aria-label="Upload photo"
+                  >
+                    <AddAPhotoIcon sx={{ fontSize: 24 }} />
+                  </button>
+                  <div className="absolute hidden group-hover:block -bottom-8 left-1/2 transform -translate-x-1/2 px-2 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap">
+                    Upload Photo
+                  </div>
+                </div>
               </ImageUploader>
             </div>
           </div>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24">
         <ImageGrid
           images={images}
           onDelete={handleImageDelete}
           isDeleting={isDeleting}
-          showGrid={showGrid}
         />
       </main>
+
+      <SettingsModal
+        isOpen={showSettings}
+        onClose={() => setShowSettings(false)}
+        isDark={isDark}
+        onToggleTheme={() => setIsDark(!isDark)}
+      />
     </div>
   );
 };

@@ -165,37 +165,45 @@ export const uploadImage = async (file: File, cropData: CropData, originalWidth:
 
 export const deleteImage = async (imageUrl: string): Promise<void> => {
   try {
-    console.log('Deleting image with URL:', imageUrl);
+    console.log('Starting delete process for URL:', imageUrl);
     
     // Extract the asset ID from the URL
     const urlParts = imageUrl.split('/');
+    console.log('URL parts:', urlParts);
     const assetIdWithFormat = urlParts[urlParts.length - 1];
+    console.log('Asset ID with format:', assetIdWithFormat);
     
-    // Extract the hash part from the asset ID
-    const hash = assetIdWithFormat.split('-')[0];
-    
+    // The assetId format is "{hash}-{dimensions}.{format}"
+    // Example: "6b40ed3ade74ee29f1896ffcfac0258a101e5b08-1000x1000.jpg"
+    const matches = assetIdWithFormat.match(/^([a-f0-9]+)(?:-\d+x\d+)?\.(?:[a-z]+)$/);
+    if (!matches) {
+      throw new Error(`Could not extract image hash from URL. Asset ID: ${assetIdWithFormat}`);
+    }
+    const hash = matches[1];
     console.log('Extracted hash:', hash);
     
     // Find the document that references this asset
-    const query = `*[_type == "photo" && image.asset._ref == "image-${hash}-*"][0]._id`;
+    const query = `*[_type == "photo" && image.asset._ref match "*${hash}*"][0]._id`;
+    console.log('Running query:', query);
     const documentId = await client.fetch(query);
-    
-    if (!documentId) {
-      console.error('No document found for this image');
-      return;
-    }
-    
     console.log('Found document ID:', documentId);
     
-    // Delete the document
+    if (!documentId) {
+      throw new Error('No document found for this image');
+    }
+    
+    // Delete the document first
+    console.log('Deleting document with ID:', documentId);
     await client.delete(documentId);
     console.log('Document deleted successfully');
     
-    // Delete the asset
-    await client.delete(`image-${hash}`);
+    // Then delete the asset
+    const finalAssetId = `image-${hash}`;
+    console.log('Deleting asset with ID:', finalAssetId);
+    await client.delete(finalAssetId);
     console.log('Asset deleted successfully');
   } catch (error) {
-    console.error('Error deleting image:', error);
+    console.error('Error in deleteImage:', error);
     if (error instanceof Error) {
       console.error('Error message:', error.message);
       console.error('Error stack:', error.stack);

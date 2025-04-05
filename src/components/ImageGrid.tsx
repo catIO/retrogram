@@ -5,9 +5,8 @@ import { client } from '../config/sanity';
 
 interface ImageGridProps {
   images: ImageData[];
-  onDelete: (imageUrl: string, index: number) => Promise<void>;
+  onDelete: (imageUrl: string) => Promise<void>;
   isDeleting: boolean;
-  showGrid: boolean;
 }
 
 interface SanityPhoto {
@@ -25,10 +24,11 @@ interface SanityPhoto {
   };
 }
 
-const ImageGrid: React.FC<ImageGridProps> = ({ images, onDelete, isDeleting, showGrid }) => {
+const ImageGrid: React.FC<ImageGridProps> = ({ images, onDelete, isDeleting }) => {
   const [selectedImage, setSelectedImage] = React.useState<string | null>(null);
   const [sanityPhotos, setSanityPhotos] = useState<SanityPhoto[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [selectedImageData, setSelectedImageData] = useState<ImageData | null>(null);
 
   console.log('ImageGrid rendering with images:', images);
 
@@ -52,23 +52,28 @@ const ImageGrid: React.FC<ImageGridProps> = ({ images, onDelete, isDeleting, sho
   const handleImageClick = (url: string) => {
     console.log('Image clicked:', url);
     setSelectedImage(url);
+    const data = images.find(img => img.url === url);
+    if (data) {
+      setSelectedImageData(data);
+    }
   };
 
   const handleCloseModal = () => {
     setSelectedImage(null);
+    setSelectedImageData(null);
   };
-
-  const selectedImageData = images.find(img => img.url === selectedImage);
-  console.log('Selected image:', selectedImage);
-  console.log('Selected image data:', selectedImageData);
-  console.log('Images:', images);
 
   const handleDelete = async (imageUrl: string) => {
     try {
-      await onDelete(imageUrl, images.findIndex(img => img.url === imageUrl));
+      console.log('Starting delete process in ImageGrid for URL:', imageUrl);
+      await onDelete(imageUrl);
+      console.log('Delete successful');
     } catch (error) {
-      console.error('Error deleting image:', error);
-      // You might want to show an error message to the user here
+      console.error('Error in handleDelete:', error);
+      if (error instanceof Error) {
+        console.error('Error message:', error.message);
+        console.error('Error stack:', error.stack);
+      }
     }
   };
 
@@ -90,13 +95,12 @@ const ImageGrid: React.FC<ImageGridProps> = ({ images, onDelete, isDeleting, sho
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
       {images.map((image, index) => {
-        console.log('Rendering image:', image);
-        // Find the corresponding Sanity photo
+        // Find the corresponding Sanity photo to get the crop data
         const sanityPhoto = sanityPhotos.find(photo => {
-          if (!photo?.image?.asset?._ref || !image?.url) {
-            console.log('Missing required data:', { photo, image });
+          if (!photo.image?.asset?._ref) {
+            console.error('Photo missing image asset reference:', photo);
             return false;
           }
           const assetId = photo.image.asset._ref.split('-')[1];
@@ -137,31 +141,45 @@ const ImageGrid: React.FC<ImageGridProps> = ({ images, onDelete, isDeleting, sho
       })}
 
       {selectedImage && selectedImageData && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="relative max-w-[1000px] w-full mx-4">
-            <div className="relative w-full" style={{ maxWidth: '1000px', aspectRatio: '1/1' }}>
-              <div className="relative w-full h-full overflow-hidden">
-                <img
-                  src={selectedImage}
-                  alt="Full image"
-                  className="absolute w-full h-full"
-                  style={{
-                    objectFit: 'cover',
-                    objectPosition: `${(selectedImageData.crop.x / selectedImageData.originalWidth) * 100}% ${(selectedImageData.crop.y / selectedImageData.originalHeight) * 100}%`,
-                    width: `${(selectedImageData.crop.width / selectedImageData.originalWidth) * 100}%`,
-                    height: `${(selectedImageData.crop.height / selectedImageData.originalHeight) * 100}%`,
-                    transform: `scale(${selectedImageData.scale})`,
-                    transformOrigin: 'top left'
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              handleCloseModal();
+            }
+          }}
+        >
+          <div className="relative max-w-[90vw] max-h-[90vh] group">
+            <div className="relative">
+              <img
+                src={selectedImage}
+                alt="Full size image"
+                className="max-w-full max-h-[90vh] object-contain rounded-lg"
+              />
+              <div className="absolute top-4 right-4 flex gap-2 transition-all opacity-0 group-hover:opacity-100">
+                <button
+                  onClick={async () => {
+                    if (window.confirm('Are you sure you want to delete this image?')) {
+                      console.log('Delete confirmed for image:', selectedImage);
+                      await handleDelete(selectedImage);
+                      handleCloseModal();
+                    }
                   }}
-                />
+                  className="text-white hover:text-red-400 p-2 rounded-full bg-black bg-opacity-50 hover:bg-opacity-75 transition-colors"
+                  aria-label="Delete image"
+                  disabled={isDeleting}
+                >
+                  <Trash2 className="w-6 h-6" />
+                </button>
+                <button
+                  onClick={handleCloseModal}
+                  className="text-white hover:text-gray-200 p-2 rounded-full bg-black bg-opacity-50 hover:bg-opacity-75 transition-colors"
+                  aria-label="Close modal"
+                >
+                  <X className="w-6 h-6" />
+                </button>
               </div>
             </div>
-            <button
-              onClick={handleCloseModal}
-              className="absolute top-4 right-4 text-white hover:text-gray-300"
-            >
-              <X className="w-6 h-6" />
-            </button>
           </div>
         </div>
       )}
