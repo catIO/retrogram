@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Settings } from 'lucide-react';
+import { Settings, LogOut } from 'lucide-react';
 import MonochromePhotosIcon from '@mui/icons-material/MonochromePhotos';
 import AddAPhotoIcon from '@mui/icons-material/AddAPhoto';
 import ImageUploader from './components/ImageUploader';
 import ImageGrid from './components/ImageGrid';
 import SettingsModal from './components/SettingsModal';
+import LoginModal from './components/LoginModal';
 import { ImageData } from './components/ImageUploader';
 import { uploadImage, deleteImage } from './services/imageService';
 import { client } from './config/sanity';
 import { urlFor } from './utils/imageUrl';
+import { useAuth } from './contexts/AuthContext';
 
 interface SanityPhoto {
   _id: string;
@@ -26,10 +28,12 @@ interface SanityPhoto {
 }
 
 const App: React.FC = () => {
+  const { isAuthenticated, logout } = useAuth();
   const [images, setImages] = useState<ImageData[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showLogin, setShowLogin] = useState(false);
   const [showGrid, setShowGrid] = useState(true);
   const [isDark, setIsDark] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -82,6 +86,10 @@ const App: React.FC = () => {
   };
 
   const handleImageUpload = async () => {
+    if (!isAuthenticated) {
+      setShowLogin(true);
+      return;
+    }
     setIsUploading(true);
     try {
       await fetchImages();
@@ -138,31 +146,49 @@ const App: React.FC = () => {
               <h1 className="ml-3 text-2xl font-playfair italic font-semibold text-gray-900 dark:text-white">Retrogram</h1>
             </div>
             <div className="flex items-center space-x-4">
-              <button
-                onClick={() => setShowSettings(true)}
-                className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                aria-label="Open settings"
-              >
-                <Settings className="w-6 h-6" />
-              </button>
-              <ImageUploader
-                onImageUpload={handleImageUpload}
-                showGrid={showGrid}
-                onToggleGrid={() => setShowGrid(!showGrid)}
-              >
-                <div className="relative group">
+              {isAuthenticated ? (
+                <>
                   <button
-                    disabled={isUploading}
-                    className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 disabled:opacity-50"
-                    aria-label="Upload photo"
+                    onClick={() => setShowSettings(true)}
+                    className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                    aria-label="Open settings"
                   >
-                    <AddAPhotoIcon sx={{ fontSize: 24 }} />
+                    <Settings className="w-6 h-6" />
                   </button>
-                  <div className="absolute hidden group-hover:block -bottom-8 left-1/2 transform -translate-x-1/2 px-2 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap">
-                    Upload Photo
-                  </div>
-                </div>
-              </ImageUploader>
+                  <ImageUploader
+                    onImageUpload={handleImageUpload}
+                    showGrid={showGrid}
+                    onToggleGrid={() => setShowGrid(!showGrid)}
+                  >
+                    <div className="relative group">
+                      <button
+                        disabled={isUploading}
+                        className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 disabled:opacity-50"
+                        aria-label="Upload photo"
+                      >
+                        <AddAPhotoIcon sx={{ fontSize: 24 }} />
+                      </button>
+                      <div className="absolute hidden group-hover:block -bottom-8 left-1/2 transform -translate-x-1/2 px-2 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap">
+                        Upload Photo
+                      </div>
+                    </div>
+                  </ImageUploader>
+                  <button
+                    onClick={logout}
+                    className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                    aria-label="Logout"
+                  >
+                    <LogOut className="w-6 h-6" />
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={() => setShowLogin(true)}
+                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                >
+                  Login
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -181,6 +207,11 @@ const App: React.FC = () => {
         onClose={() => setShowSettings(false)}
         isDark={isDark}
         onToggleTheme={() => setIsDark(!isDark)}
+      />
+
+      <LoginModal
+        isOpen={showLogin}
+        onClose={() => setShowLogin(false)}
       />
     </div>
   );
