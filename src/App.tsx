@@ -13,6 +13,8 @@ import { client } from './config/sanity';
 import { urlFor } from './utils/imageUrl';
 import { useAuth } from './contexts/AuthContext';
 import ImageModal from './components/ImageModal';
+import { debounce } from 'lodash';
+import { addScrollToBottomListener } from './utils/scrollUtils';
 
 interface SanityPhoto {
   _id: string;
@@ -29,11 +31,16 @@ interface SanityPhoto {
   };
 }
 
+const ITEMS_PER_PAGE = 12;
+
 const App: React.FC = () => {
   const { isAuthenticated, logout } = useAuth();
   const [images, setImages] = useState<ImageData[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasMore, setHasMore] = useState(true);
+  const [page, setPage] = useState(1);
   const [showSettings, setShowSettings] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
   const [showGrid, setShowGrid] = useState(true);
@@ -48,6 +55,9 @@ const App: React.FC = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState<number>(-1);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
+  // Add a ref to track if we're currently loading more images
+  const isLoadingMoreRef = React.useRef(false);
+
   useEffect(() => {
     if (isDark) {
       document.documentElement.classList.add('dark');
@@ -58,19 +68,53 @@ const App: React.FC = () => {
     }
   }, [isDark]);
 
-  useEffect(() => {
-    fetchImages();
-  }, []);
-
-  const fetchImages = async () => {
+  const fetchImages = async (pageNum: number = 1, append: boolean = false) => {
+    // Prevent multiple simultaneous requests
+    if (isLoadingMoreRef.current) return;
+    
+    setIsLoading(true);
+    isLoadingMoreRef.current = true;
+    
     try {
-      const query = `*[_type == "photo"] | order(_createdAt desc)`;
+      const start = (pageNum - 1) * ITEMS_PER_PAGE;
+      const end = start + ITEMS_PER_PAGE;
+      
+      // Update the query to get the correct image reference
+      const query = `*[_type == "photo"] | order(_createdAt desc) [${start}...${end}] {
+        _id,
+        image {
+          asset-> {
+            _id,
+            url
+          }
+        },
+        crop,
+        scale,
+        originalWidth,
+        originalHeight
+      }`;
+      
       const photos = await client.fetch(query);
       console.log('Fetched photos:', photos);
       
       const mappedImages = photos.map((photo: any) => {
-        const imageUrl = urlFor(photo.image).url();
-        console.log('Generated URL for photo:', imageUrl);
+        // Log the image data to debug
+        console.log('Processing photo:', photo);
+        
+        // Use the direct URL if available, otherwise generate one
+        let imageUrl;
+        if (photo.image?.asset?.url) {
+          imageUrl = photo.image.asset.url;
+        } else {
+          // Fallback to generating URL from reference
+          imageUrl = urlFor(photo.image)
+            .width(800)
+            .height(800)
+            .quality(80)
+            .url();
+        }
+        
+        console.log('Using URL:', imageUrl);
         
         return {
           url: imageUrl,
@@ -81,13 +125,35 @@ const App: React.FC = () => {
         };
       });
       
-      console.log('Mapped images:', mappedImages);
-      setImages(mappedImages);
+      setImages(prev => append ? [...prev, ...mappedImages] : mappedImages);
+      setHasMore(photos.length === ITEMS_PER_PAGE);
+      setPage(pageNum);
     } catch (error) {
       console.error('Error fetching images:', error);
       setError('Failed to load images. Please try refreshing the page.');
+    } finally {
+      setIsLoading(false);
+      isLoadingMoreRef.current = false;
     }
   };
+
+  // Initial fetch
+  useEffect(() => {
+    fetchImages(1, false);
+  }, []);
+
+  // Add scroll listener for infinite scrolling
+  useEffect(() => {
+    const removeListener = addScrollToBottomListener(() => {
+      if (!isLoading && hasMore && !isLoadingMoreRef.current) {
+        loadMore();
+      }
+    }, 200); // Trigger when within 200px of the bottom
+    
+    return () => {
+      removeListener();
+    };
+  }, [isLoading, hasMore]);
 
   const handleImageUpload = async () => {
     if (!isAuthenticated) {
@@ -96,7 +162,8 @@ const App: React.FC = () => {
     }
     setIsUploading(true);
     try {
-      await fetchImages();
+      // Only fetch the first page after upload
+      await fetchImages(1, false);
     } catch (error) {
       console.error('Error refreshing images:', error);
     } finally {
@@ -114,9 +181,8 @@ const App: React.FC = () => {
     setIsDeleting(true);
     try {
       await deleteImage(imageUrl);
-      console.log('Image deleted successfully, refreshing images...');
-      await fetchImages();
-      console.log('Images refreshed successfully');
+      // Remove the deleted image from the state instead of refetching
+      setImages(prev => prev.filter(img => img.url !== imageUrl));
     } catch (error) {
       console.error('Error in handleImageDelete:', error);
       if (error instanceof Error) {
@@ -144,6 +210,12 @@ const App: React.FC = () => {
       const prevImage = images[currentImageIndex - 1];
       setSelectedImage(prevImage.url);
       setCurrentImageIndex(currentImageIndex - 1);
+    }
+  };
+
+  const loadMore = () => {
+    if (!isLoading && hasMore && !isLoadingMoreRef.current) {
+      fetchImages(page + 1, true);
     }
   };
 
@@ -217,9 +289,24 @@ const App: React.FC = () => {
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8 mt-20">
         <ImageGrid 
           images={images} 
-          onDelete={handleImageDelete}
           onImageClick={handleImageClick}
+          isLoading={isLoading}
         />
+        {hasMore && !isLoading && (
+          <div className="flex justify-center mt-8">
+            <button
+              onClick={loadMore}
+              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+            >
+              Load More
+            </button>
+          </div>
+        )}
+        {isLoading && page > 1 && (
+          <div className="flex justify-center mt-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+          </div>
+        )}
       </main>
 
       <LoginModal
