@@ -35,3 +35,6 @@ yarn-error.log*
 
 # Sanity
 /.bolt
+
+# Local Netlify folder
+.netlify

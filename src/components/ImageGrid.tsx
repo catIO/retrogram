@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { ImageData } from './ImageUploader';
 import { Trash2, Heart, MessageCircle, Share2, X } from 'lucide-react';
 import { client } from '../config/sanity';
+import { useAuth } from '../contexts/AuthContext';
 
 interface ImageGridProps {
   images: ImageData[];
@@ -25,6 +26,7 @@ interface SanityPhoto {
 }
 
 const ImageGrid: React.FC<ImageGridProps> = ({ images, onDelete, isDeleting }) => {
+  const { isAuthenticated } = useAuth();
   const [selectedImage, setSelectedImage] = React.useState<string | null>(null);
   const [sanityPhotos, setSanityPhotos] = useState<SanityPhoto[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -157,20 +159,22 @@ const ImageGrid: React.FC<ImageGridProps> = ({ images, onDelete, isDeleting }) =
                 className="max-w-full max-h-[90vh] object-contain rounded-lg"
               />
               <div className="absolute top-4 right-4 flex gap-2 transition-all opacity-0 group-hover:opacity-100">
-                <button
-                  onClick={async () => {
-                    if (window.confirm('Are you sure you want to delete this image?')) {
-                      console.log('Delete confirmed for image:', selectedImage);
-                      await handleDelete(selectedImage);
-                      handleCloseModal();
-                    }
-                  }}
-                  className="text-white hover:text-red-400 p-2 rounded-full bg-black bg-opacity-50 hover:bg-opacity-75 transition-colors"
-                  aria-label="Delete image"
-                  disabled={isDeleting}
-                >
-                  <Trash2 className="w-6 h-6" />
-                </button>
+                {isAuthenticated && (
+                  <button
+                    onClick={async () => {
+                      if (window.confirm('Are you sure you want to delete this image?')) {
+                        console.log('Delete confirmed for image:', selectedImage);
+                        await handleDelete(selectedImage);
+                        handleCloseModal();
+                      }
+                    }}
+                    className="text-white hover:text-red-400 p-2 rounded-full bg-black bg-opacity-50 hover:bg-opacity-75 transition-colors"
+                    aria-label="Delete image"
+                    disabled={isDeleting}
+                  >
+                    <Trash2 className="w-6 h-6" />
+                  </button>
+                )}
                 <button
                   onClick={handleCloseModal}
                   className="text-white hover:text-gray-200 p-2 rounded-full bg-black bg-opacity-50 hover:bg-opacity-75 transition-colors"

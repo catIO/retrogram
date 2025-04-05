@@ -101,6 +101,11 @@ const App: React.FC = () => {
   };
 
   const handleImageDelete = async (imageUrl: string) => {
+    if (!isAuthenticated) {
+      setShowLogin(true);
+      return;
+    }
+
     console.log('Starting delete process in App for URL:', imageUrl);
     setIsDeleting(true);
     try {
