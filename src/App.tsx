@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Settings, LogOut } from 'lucide-react';
+import { LogOut } from 'lucide-react';
 import MonochromePhotosIcon from '@mui/icons-material/MonochromePhotos';
 import AddAPhotoIcon from '@mui/icons-material/AddAPhoto';
+import SettingsIcon from '@mui/icons-material/Settings';
 import ImageUploader from './components/ImageUploader';
 import ImageGrid from './components/ImageGrid';
 import SettingsModal from './components/SettingsModal';
@@ -179,7 +180,7 @@ const App: React.FC = () => {
                     className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
                     aria-label="Open settings"
                   >
-                    <Settings className="w-6 h-6" />
+                    <SettingsIcon sx={{ fontSize: 24 }} />
                   </button>
                   <ImageUploader
                     onImageUpload={handleImageUpload}
