@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { LogOut } from 'lucide-react';
 import MonochromePhotosIcon from '@mui/icons-material/MonochromePhotos';
 import AddAPhotoIcon from '@mui/icons-material/AddAPhoto';
 import SettingsIcon from '@mui/icons-material/Settings';

@@ -38,7 +38,7 @@ const ImageModal: React.FC<ImageModalProps> = ({
       tabIndex={0}
     >
       <div 
-        className="relative max-w-4xl max-h-[90vh] w-full mx-4 group"
+        className="relative max-w-4xl max-h-[90vh] w-full mx-2 group"
         onClick={e => e.stopPropagation()}
       >
         <img 
@@ -49,7 +49,7 @@ const ImageModal: React.FC<ImageModalProps> = ({
         
         {/* Navigation buttons */}
         <button
-          className={`absolute left-4 top-1/2 -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-75 transition-opacity ${!hasPrev ? 'opacity-50 cursor-not-allowed' : ''}`}
+          className={`absolute left-2 top-1/2 -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-75 transition-opacity ${!hasPrev ? 'opacity-50 cursor-not-allowed' : ''}`}
           onClick={(e) => {
             e.stopPropagation();
             if (hasPrev) onNavigate('prev');
@@ -62,7 +62,7 @@ const ImageModal: React.FC<ImageModalProps> = ({
         </button>
         
         <button
-          className={`absolute right-4 top-1/2 -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-75 transition-opacity ${!hasNext ? 'opacity-50 cursor-not-allowed' : ''}`}
+          className={`absolute right-2 top-1/2 -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-75 transition-opacity ${!hasNext ? 'opacity-50 cursor-not-allowed' : ''}`}
           onClick={(e) => {
             e.stopPropagation();
             if (hasNext) onNavigate('next');
@@ -74,36 +74,33 @@ const ImageModal: React.FC<ImageModalProps> = ({
           </svg>
         </button>
 
-        {/* Action buttons container */}
-        <div className="absolute top-4 right-4 flex gap-2 transition-all opacity-0 group-hover:opacity-100">
-          {/* Delete button */}
-          {isAuthenticated && (
-            <button
-              className="text-white hover:text-red-400 p-2 rounded-full bg-black bg-opacity-50 hover:bg-opacity-75 transition-colors"
-              onClick={async (e) => {
-                e.stopPropagation();
-                if (window.confirm('Are you sure you want to delete this image?')) {
-                  await onDelete();
-                  onClose();
-                }
-              }}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-              </svg>
-            </button>
-          )}
-          
-          {/* Close button */}
+        {/* Delete button - Bottom left */}
+        {isAuthenticated && (
           <button
-            className="text-white hover:text-gray-200 p-2 rounded-full bg-black bg-opacity-50 hover:bg-opacity-75 transition-colors"
-            onClick={onClose}
+            className="absolute bottom-2 left-2 text-white hover:text-red-400 p-2 rounded-full bg-black bg-opacity-50 hover:bg-opacity-75 transition-all opacity-0 group-hover:opacity-100"
+            onClick={async (e) => {
+              e.stopPropagation();
+              if (window.confirm('Are you sure you want to delete this image?')) {
+                await onDelete();
+                onClose();
+              }
+            }}
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
             </svg>
           </button>
-        </div>
+        )}
+          
+        {/* Close button - Overlapping top right */}
+        <button
+          className="absolute -top-2 -right-2 text-white hover:text-gray-200 p-2 rounded-full bg-black bg-opacity-50 hover:bg-opacity-75 transition-all opacity-0 group-hover:opacity-100 z-10"
+          onClick={onClose}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
       </div>
     </div>
   );

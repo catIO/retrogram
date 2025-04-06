@@ -1,5 +1,6 @@
 import React from 'react';
-import { X, LogOut } from 'lucide-react';
+import { Close, Logout } from '@mui/icons-material';
+import { useAuth } from '../contexts/AuthContext';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -18,6 +19,10 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 }) => {
   if (!isOpen) return null;
 
+  const handleLogout = () => {
+    onLogout();
+  };
+
   return (
     <div
       className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
@@ -31,11 +36,10 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
         <div className="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Settings</h2>
           <button
+            className="text-white hover:text-gray-200 p-2 rounded-full bg-black bg-opacity-50 hover:bg-opacity-75 transition-colors"
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-            aria-label="Close settings"
           >
-            <X className="w-6 h-6" />
+            <Close className="h-6 w-6" />
           </button>
         </div>
         <div className="p-4 space-y-4">
@@ -56,11 +60,11 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
           </div>
           <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
             <button
-              onClick={onLogout}
-              className="flex items-center justify-center w-full px-4 py-2 text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition-colors"
+              className="flex items-center gap-2 text-red-600 hover:text-red-700"
+              onClick={handleLogout}
             >
-              <LogOut className="w-5 h-5 mr-2" />
-              Logout
+              <Logout className="h-5 w-5" />
+              <span>Log Out</span>
             </button>
           </div>
         </div>

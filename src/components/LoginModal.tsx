@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X } from 'lucide-react';
+import { Close } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 
 interface LoginModalProps {
@@ -34,11 +34,10 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
         <div className="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Login</h2>
           <button
+            className="text-white hover:text-gray-200 p-2 rounded-full bg-black bg-opacity-50 hover:bg-opacity-75 transition-colors"
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-            aria-label="Close login"
           >
-            <X className="w-6 h-6" />
+            <Close className="h-6 w-6" />
           </button>
         </div>
         <form onSubmit={handleSubmit} className="p-4 space-y-4">

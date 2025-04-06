@@ -1,7 +1,7 @@
 import React, { useRef, useState, useCallback } from 'react';
 import ReactCrop, { Crop, PixelCrop, centerCrop, makeAspectCrop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
-import { Upload, X, ZoomIn, ZoomOut, RotateCcw, Grid } from 'lucide-react';
+import { CloudUpload, Close, ZoomIn, ZoomOut, RotateLeft, GridOn } from '@mui/icons-material';
 import { uploadImage } from '../services/imageService';
 
 interface ImageUploaderProps {
@@ -279,11 +279,10 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ children, onImageUpload, 
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Crop Image</h2>
               <button
+                className="text-white hover:text-gray-200 p-2 rounded-full bg-black bg-opacity-50 hover:bg-opacity-75 transition-colors"
                 onClick={handleCloseModal}
-                className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                aria-label="Close modal"
               >
-                <X className="w-6 h-6" />
+                <Close className="h-6 w-6" />
               </button>
             </div>
             <div className="relative w-full max-w-3xl mx-auto" style={{ aspectRatio: '1/1' }}>
@@ -310,30 +309,28 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ children, onImageUpload, 
             <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-4">
               <div className="flex flex-wrap justify-center sm:justify-start gap-2">
                 <button
-                  onClick={handleZoomIn}
-                  className="p-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                  className="text-white hover:text-gray-200 p-2 rounded-full bg-black bg-opacity-50 hover:bg-opacity-75 transition-colors"
+                  onClick={() => setScale(prev => Math.min(prev + 0.1, 2))}
                 >
-                  <ZoomIn className="w-5 h-5" />
+                  <ZoomIn className="h-6 w-6" />
                 </button>
                 <button
-                  onClick={handleZoomOut}
-                  className="p-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                  className="text-white hover:text-gray-200 p-2 rounded-full bg-black bg-opacity-50 hover:bg-opacity-75 transition-colors"
+                  onClick={() => setScale(prev => Math.max(prev - 0.1, 0.5))}
                 >
-                  <ZoomOut className="w-5 h-5" />
+                  <ZoomOut className="h-6 w-6" />
                 </button>
                 <button
-                  onClick={handleRotate}
-                  className="p-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                  className="text-white hover:text-gray-200 p-2 rounded-full bg-black bg-opacity-50 hover:bg-opacity-75 transition-colors"
+                  onClick={() => setRotation(prev => (prev + 90) % 360)}
                 >
-                  <RotateCcw className="w-5 h-5" />
+                  <RotateLeft className="h-6 w-6" />
                 </button>
                 <button
-                  onClick={toggleGrid}
-                  className={`p-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors ${
-                    showGrid ? 'bg-gray-100 dark:bg-gray-700' : ''
-                  }`}
+                  className="text-white hover:text-gray-200 p-2 rounded-full bg-black bg-opacity-50 hover:bg-opacity-75 transition-colors"
+                  onClick={() => setShowGrid(!showGrid)}
                 >
-                  <Grid className="w-5 h-5" />
+                  <GridOn className="h-6 w-6" />
                 </button>
               </div>
               <div className="flex flex-wrap justify-center sm:justify-end gap-2 mt-2 sm:mt-0">
