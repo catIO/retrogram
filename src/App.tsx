@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import MonochromePhotosIcon from '@mui/icons-material/MonochromePhotos';
-import AddAPhotoIcon from '@mui/icons-material/AddAPhoto';
+import CloudUpload from '@mui/icons-material/CloudUpload';
 import SettingsIcon from '@mui/icons-material/Settings';
 import ImageUploader from './components/ImageUploader';
 import ImageGrid from './components/ImageGrid';
@@ -235,13 +235,13 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
-      <header className="fixed top-0 left-0 right-0 bg-white dark:bg-gray-800 shadow-sm z-10">
+    <div className="min-h-screen bg-gradient-to-t from-gray-800 from-90% to-black">
+      <header className="z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-20">
             <div className="flex items-center">
               <MonochromePhotosIcon sx={{ fontSize: 40 }} className="text-[#a12525]" />
-              <h1 className="ml-3 text-2xl font-playfair italic font-semibold text-gray-900 dark:text-white">Retrogram</h1>
+              <h1 className="ml-3 text-2xl font-playfair italic font-semibold text-white">Retrogram</h1>
             </div>
             <div className="flex items-center space-x-4">
               {isAuthenticated ? (
@@ -264,7 +264,7 @@ const App: React.FC = () => {
                         className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 disabled:opacity-50"
                         aria-label="Upload photo"
                       >
-                        <AddAPhotoIcon sx={{ fontSize: 24 }} />
+                        <CloudUpload sx={{ fontSize: 24 }} />
                       </button>
                       <div className="absolute hidden group-hover:block -bottom-8 left-1/2 transform -translate-x-1/2 px-2 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap">
                         Upload Photo
@@ -285,7 +285,7 @@ const App: React.FC = () => {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8 mt-20">
+      <main className="max-w-7xl mx-auto py-4 sm:px-4 lg:px-6">
         <ImageGrid 
           images={images} 
           onImageClick={handleImageClick}
