@@ -22,7 +22,7 @@ const ImageGrid: React.FC<ImageGridProps> = ({ images, onImageClick, isLoading }
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 max-w-7xl mx-auto px-4">
       {images.map((image, index) => (
         <div
-          key={index}
+          key={image.url || index}
           className="relative aspect-square bg-gray-200 dark:bg-gray-700 rounded-lg overflow-hidden group cursor-pointer shadow-lg hover:shadow-xl transition-shadow duration-300"
           onClick={() => onImageClick(image.url)}
         >

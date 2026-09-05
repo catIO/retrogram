@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import MonochromePhotosIcon from '@mui/icons-material/MonochromePhotos';
+import RetroInstagramLogo from './components/RetroInstagramLogo';
 import CloudUpload from '@mui/icons-material/CloudUpload';
 import SettingsIcon from '@mui/icons-material/Settings';
 import ImageUploader from './components/ImageUploader';
@@ -30,7 +30,7 @@ interface SanityPhoto {
   };
 }
 
-const ITEMS_PER_PAGE = 12;
+const ITEMS_PER_PAGE = 24;
 
 const App: React.FC = () => {
   const { isAuthenticated, logout } = useAuth();
@@ -40,6 +40,7 @@ const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(1);
+  const pageRef = React.useRef(1);
   const [showSettings, setShowSettings] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
   const [showGrid, setShowGrid] = useState(true);
@@ -78,9 +79,10 @@ const App: React.FC = () => {
       const start = (pageNum - 1) * ITEMS_PER_PAGE;
       const end = start + ITEMS_PER_PAGE;
       
-      // Update the query to get the correct image reference
-      const query = `*[_type == "photo"] | order(_createdAt desc) [${start}...${end}] {
+      // Order by taken date descending (newest taken first), falling back to _createdAt
+      const query = `*[_type == "photo"] | order(coalesce(takenAt, _createdAt) desc) [${start}...${end}] {
         _id,
+        takenAt,
         image {
           asset-> {
             _id,
@@ -124,12 +126,25 @@ const App: React.FC = () => {
         };
       });
       
-      setImages(prev => append ? [...prev, ...mappedImages] : mappedImages);
+      setImages(prev => {
+        const base = append ? prev : [];
+        const seen = new Set(base.map(img => img.url));
+        const uniqueNew: ImageData[] = [];
+        for (const img of mappedImages) {
+          if (!seen.has(img.url)) {
+            seen.add(img.url);
+            uniqueNew.push(img);
+          }
+        }
+        return [...base, ...uniqueNew];
+      });
       setHasMore(photos.length === ITEMS_PER_PAGE);
       setPage(pageNum);
+      pageRef.current = pageNum;
     } catch (error) {
       console.error('Error fetching images:', error);
-      setError('Failed to load images. Please try refreshing the page.');
+      const message = error instanceof Error ? error.message : 'Failed to load images. Please try refreshing the page.';
+      setError(message);
     } finally {
       setIsLoading(false);
       isLoadingMoreRef.current = false;
@@ -214,7 +229,7 @@ const App: React.FC = () => {
 
   const loadMore = () => {
     if (!isLoading && hasMore && !isLoadingMoreRef.current) {
-      fetchImages(page + 1, true);
+      fetchImages(pageRef.current + 1, true);
     }
   };
 
@@ -240,8 +255,13 @@ const App: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-20">
             <div className="flex items-center">
-              <MonochromePhotosIcon sx={{ fontSize: 40 }} className="text-[#a12525]" />
-              <h1 className="ml-3 text-2xl font-playfair italic font-semibold text-white">Retrogram</h1>
+              <RetroInstagramLogo size={42} />
+              <div className="ml-3 flex items-baseline space-x-2.5">
+                <h1 className="text-2xl font-playfair italic font-semibold text-white">Retrogram</h1>
+                <span className="text-[11px] font-mono text-amber-200/80 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded tracking-wide">
+                  square photos
+                </span>
+              </div>
             </div>
             <div className="flex items-center space-x-4">
               {isAuthenticated ? (

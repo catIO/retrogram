@@ -142,14 +142,15 @@ export const uploadImage = async (file: File, cropData: CropData, originalWidth:
       },
       originalWidth, // Use the original width of the cropped image
       originalHeight, // Use the original height of the cropped image
-      scale: 1 // Scale is always 1 since we're using the cropped image
+      scale: 1, // Scale is always 1 since we're using the cropped image
+      takenAt: new Date().toISOString()
     };
 
     const result = await client.create(photoData);
     console.log('Document created:', result);
     
     // Get the URL with transformations
-    const imageUrl = `https://cdn.sanity.io/images/${import.meta.env.VITE_SANITY_PROJECT_ID}/production/${asset._id}`;
+    const imageUrl = `https://cdn.sanity.io/images/${import.meta.env.VITE_SANITY_PROJECT_ID || 'o5amj5nq'}/production/${asset._id}`;
     console.log('Generated image URL:', imageUrl);
     
     return imageUrl;

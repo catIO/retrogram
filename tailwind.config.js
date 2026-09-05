@@ -6,6 +6,7 @@ export default {
     extend: {
       fontFamily: {
         'playfair': ['"Playfair Display"', 'serif'],
+        'grand-hotel': ['"Grand Hotel"', 'cursive'],
         'sans': ['Inter', 'system-ui', 'sans-serif'],
       },
     },

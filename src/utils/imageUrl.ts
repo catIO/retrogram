@@ -56,7 +56,7 @@ export const urlFor = (source: any): ImageUrlBuilder => {
     url: () => {
       // The _ref format is: image-{id}-{hash}.{extension}
       const [_, id, hash, extension] = source.asset._ref.split('-');
-      const projectId = import.meta.env.VITE_SANITY_PROJECT_ID;
+      const projectId = import.meta.env.VITE_SANITY_PROJECT_ID || 'o5amj5nq';
       
       // Build the base URL
       let url = `https://cdn.sanity.io/images/${projectId}/production/${id}-${hash}.${extension}`;

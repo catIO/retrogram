@@ -13,6 +13,11 @@ export default {
       validation: (Rule: any) => Rule.required(),
     },
     {
+      name: 'takenAt',
+      title: 'Taken At',
+      type: 'datetime',
+    },
+    {
       name: 'crop',
       title: 'Crop Data',
       type: 'object',

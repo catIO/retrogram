@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
+import { client } from '../config/sanity';
+
 interface AuthContextType {
   isAuthenticated: boolean;
   login: (token: string) => void;
@@ -13,19 +15,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     // Check if there's a token in localStorage on initial load
-    const token = localStorage.getItem('auth_token');
+    const token = localStorage.getItem('auth_token')?.trim();
     if (token) {
+      client.config({ token });
       setIsAuthenticated(true);
     }
   }, []);
 
   const login = (token: string) => {
-    localStorage.setItem('auth_token', token);
+    const trimmed = token.trim();
+    localStorage.setItem('auth_token', trimmed);
+    client.config({ token: trimmed });
     setIsAuthenticated(true);
   };
 
   const logout = () => {
     localStorage.removeItem('auth_token');
+    const defaultToken = import.meta.env.VITE_SANITY_TOKEN?.trim() || undefined;
+    client.config({ token: defaultToken });
     setIsAuthenticated(false);
   };
 
