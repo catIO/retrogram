@@ -1,5 +1,82 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1" xmlns="http://www.w3.org/2000/svg">
-    <path d="M12 15.2C10.2 15.2 8.8 13.8 8.8 12C8.8 10.2 10.2 8.8 12 8.8C13.8 8.8 15.2 10.2 15.2 12C15.2 13.8 13.8 15.2 12 15.2ZM12 7C9.2 7 7 9.2 7 12C7 14.8 9.2 17 12 17C14.8 17 17 14.8 17 12C17 9.2 14.8 7 12 7Z" fill="#a12525"/>
-    <path d="M20 5H17L15.8 3H8.2L7 5H4C2.9 5 2 5.9 2 7V17C2 18.1 2.9 19 4 19H20C21.1 19 22 18.1 22 17V7C22 5.9 21.1 5 20 5ZM20 17H4V7H7.2L8.4 5H15.6L16.8 7H20V17Z" fill="#a12525"/>
-</svg> 
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <!-- Vintage upper leather gradient -->
+    <linearGradient id="leatherGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#935728" />
+      <stop offset="100%" stop-color="#6e3d17" />
+    </linearGradient>
+
+    <!-- Vintage lower cream body gradient -->
+    <linearGradient id="creamGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#e8e0d2" />
+      <stop offset="100%" stop-color="#cfc4b0" />
+    </linearGradient>
+
+    <!-- Chrome lens rim -->
+    <linearGradient id="chromeRing" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="45%" stop-color="#aaaaaa" />
+      <stop offset="70%" stop-color="#666666" />
+      <stop offset="100%" stop-color="#dddddd" />
+    </linearGradient>
+
+    <!-- Deep optical lens reflection -->
+    <radialGradient id="lensGlass" cx="38%" cy="38%" r="60%">
+      <stop offset="0%" stop-color="#1e3a5f" />
+      <stop offset="55%" stop-color="#0e1724" />
+      <stop offset="100%" stop-color="#020508" />
+    </radialGradient>
+
+    <!-- Outer drop shadow for tab visibility -->
+    <filter id="tabShadow" x="-10%" y="-10%" width="120%" height="125%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="1.5" flood-color="#000000" flood-opacity="0.4" />
+    </filter>
+  </defs>
+
+  <g filter="url(#tabShadow)">
+    <!-- Squircle base outline -->
+    <rect x="3" y="3" width="58" height="58" rx="15" fill="#3d200b" />
+
+    <!-- Upper vintage leather section -->
+    <path d="M 3 18 C 3 9.7 9.7 3 18 3 L 46 3 C 54.3 3 61 9.7 61 18 L 61 28 L 3 28 Z" fill="url(#leatherGrad)" />
+
+    <!-- Lower vintage cream section -->
+    <path d="M 3 28 L 61 28 L 61 46 C 61 54.3 54.3 61 46 61 L 18 61 C 9.7 61 3 54.3 3 46 Z" fill="url(#creamGrad)" />
+
+    <!-- Seam line with bevel -->
+    <line x1="3" y1="27.5" x2="61" y2="27.5" stroke="#4a270f" stroke-width="1.2" />
+    <line x1="3" y1="28.7" x2="61" y2="28.7" stroke="#ffffff" stroke-width="0.8" opacity="0.6" />
+
+    <!-- Iconic 4-Color Vintage Rainbow Stripe (Red, Yellow, Green, Blue) -->
+    <g>
+      <rect x="11" y="4" width="3.2" height="23.5" fill="#e73323" />
+      <rect x="14.2" y="4" width="3.2" height="23.5" fill="#fbb024" />
+      <rect x="17.4" y="4" width="3.2" height="23.5" fill="#3ea834" />
+      <rect x="20.6" y="4" width="3.2" height="23.5" fill="#0083cb" />
+    </g>
+
+    <!-- Top-Right Viewfinder window -->
+    <rect x="43" y="9.5" width="11" height="11" rx="3" fill="#181818" stroke="#383838" stroke-width="1.2" />
+    <circle cx="48.5" cy="15" r="3.2" fill="#2d425b" />
+    <circle cx="47.3" cy="13.8" r="1.1" fill="#ffffff" opacity="0.9" />
+
+    <!-- Center Vintage Camera Lens -->
+    <!-- Chrome outer ring -->
+    <circle cx="32" cy="40.5" r="16.5" fill="url(#chromeRing)" />
+    <!-- Dark step ring -->
+    <circle cx="32" cy="40.5" r="14.8" fill="#1a1a1a" />
+    <!-- Inner chrome bezel -->
+    <circle cx="32" cy="40.5" r="12.6" fill="#444444" stroke="#888888" stroke-width="0.6" />
+    <!-- Optical glass element -->
+    <circle cx="32" cy="40.5" r="11.5" fill="url(#lensGlass)" />
+    <!-- Center aperture pupil -->
+    <circle cx="32" cy="40.5" r="6" fill="#03060a" stroke="#1b2838" stroke-width="0.8" />
+
+    <!-- Specular glass reflections -->
+    <ellipse cx="28" cy="36" rx="3.8" ry="2" transform="rotate(-35 28 36)" fill="#ffffff" opacity="0.55" />
+    <circle cx="36.5" cy="45" r="1.2" fill="#ffffff" opacity="0.4" />
+
+    <!-- Squircle outer border finish -->
+    <rect x="3" y="3" width="58" height="58" rx="15" fill="none" stroke="#261407" stroke-width="1.2" opacity="0.85" />
+  </g>
+</svg>
