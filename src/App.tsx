@@ -1,49 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import RetroInstagramLogo from './components/RetroInstagramLogo';
-import CloudUpload from '@mui/icons-material/CloudUpload';
 import SettingsIcon from '@mui/icons-material/Settings';
-import ImageUploader from './components/ImageUploader';
 import ImageGrid from './components/ImageGrid';
 import SettingsModal from './components/SettingsModal';
-import LoginModal from './components/LoginModal';
-import { ImageData } from './components/ImageUploader';
-import { uploadImage, deleteImage } from './services/imageService';
+import { ImageData } from './components/ImageGrid';
 import { client } from './config/sanity';
 import { urlFor } from './utils/imageUrl';
-import { useAuth } from './contexts/AuthContext';
 import ImageModal from './components/ImageModal';
-import { debounce } from 'lodash';
 import { addScrollToBottomListener } from './utils/scrollUtils';
-
-interface SanityPhoto {
-  _id: string;
-  image: {
-    asset: {
-      _ref: string;
-    };
-  };
-  crop: {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-  };
-}
 
 const ITEMS_PER_PAGE = 24;
 
 const App: React.FC = () => {
-  const { isAuthenticated, logout } = useAuth();
   const [images, setImages] = useState<ImageData[]>([]);
-  const [isUploading, setIsUploading] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(1);
   const pageRef = React.useRef(1);
   const [showSettings, setShowSettings] = useState(false);
-  const [showLogin, setShowLogin] = useState(false);
-  const [showGrid, setShowGrid] = useState(true);
   const [isDark, setIsDark] = useState(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('theme') === 'dark' ||
@@ -53,7 +27,7 @@ const App: React.FC = () => {
   });
   const [error, setError] = useState<string | null>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState<number>(-1);
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [selectedImage, setSelectedImage] = useState<ImageData | null>(null);
 
   // Add a ref to track if we're currently loading more images
   const isLoadingMoreRef = React.useRef(false);
@@ -82,7 +56,11 @@ const App: React.FC = () => {
       // Order by taken date descending (newest taken first), falling back to _createdAt
       const query = `*[_type == "photo"] | order(coalesce(takenAt, _createdAt) desc) [${start}...${end}] {
         _id,
+        _createdAt,
         takenAt,
+        title,
+        description,
+        tags,
         image {
           asset-> {
             _id,
@@ -96,33 +74,32 @@ const App: React.FC = () => {
       }`;
       
       const photos = await client.fetch(query);
-      console.log('Fetched photos:', photos);
       
-      const mappedImages = photos.map((photo: any) => {
-        // Log the image data to debug
-        console.log('Processing photo:', photo);
-        
-        // Use the direct URL if available, otherwise generate one
-        let imageUrl;
+      const mappedImages: ImageData[] = photos.map((photo: any) => {
+        // Use direct URL if available, otherwise generate one
+        let imageUrl: string;
         if (photo.image?.asset?.url) {
           imageUrl = photo.image.asset.url;
         } else {
-          // Fallback to generating URL from reference
           imageUrl = urlFor(photo.image)
-            .width(800)
-            .height(800)
-            .quality(80)
+            .width(1600)
+            .height(1600)
+            .quality(85)
             .url();
         }
         
-        console.log('Using URL:', imageUrl);
-        
         return {
+          id: photo._id,
           url: imageUrl,
           crop: photo.crop || { x: 0, y: 0, width: 0, height: 0 },
           scale: photo.scale || 1,
           originalWidth: photo.originalWidth || 0,
-          originalHeight: photo.originalHeight || 0
+          originalHeight: photo.originalHeight || 0,
+          takenAt: photo.takenAt,
+          createdAt: photo._createdAt,
+          title: photo.title,
+          description: photo.description,
+          tags: photo.tags
         };
       });
       
@@ -138,6 +115,7 @@ const App: React.FC = () => {
         }
         return [...base, ...uniqueNew];
       });
+      
       setHasMore(photos.length === ITEMS_PER_PAGE);
       setPage(pageNum);
       pageRef.current = pageNum;
@@ -169,61 +147,21 @@ const App: React.FC = () => {
     };
   }, [isLoading, hasMore]);
 
-  const handleImageUpload = async () => {
-    if (!isAuthenticated) {
-      setShowLogin(true);
-      return;
-    }
-    setIsUploading(true);
-    try {
-      // Only fetch the first page after upload
-      await fetchImages(1, false);
-    } catch (error) {
-      console.error('Error refreshing images:', error);
-    } finally {
-      setIsUploading(false);
-    }
-  };
-
-  const handleImageDelete = async (imageUrl: string) => {
-    if (!isAuthenticated) {
-      setShowLogin(true);
-      return;
-    }
-
-    console.log('Starting delete process in App for URL:', imageUrl);
-    setIsDeleting(true);
-    try {
-      await deleteImage(imageUrl);
-      // Remove the deleted image from the state instead of refetching
-      setImages(prev => prev.filter(img => img.url !== imageUrl));
-    } catch (error) {
-      console.error('Error in handleImageDelete:', error);
-      if (error instanceof Error) {
-        console.error('Error message:', error.message);
-        console.error('Error stack:', error.stack);
-      }
-      setError('Failed to delete image. Please try again.');
-    } finally {
-      setIsDeleting(false);
-    }
-  };
-
-  const handleImageClick = (imageUrl: string) => {
-    const index = images.findIndex(img => img.url === imageUrl);
+  const handleImageClick = (image: ImageData) => {
+    const index = images.findIndex(img => (img.id && img.id === image.id) || img.url === image.url);
     setCurrentImageIndex(index);
-    setSelectedImage(imageUrl);
+    setSelectedImage(image);
   };
 
   const handleNavigate = (direction: 'next' | 'prev') => {
     if (direction === 'next' && currentImageIndex < images.length - 1) {
-      const nextImage = images[currentImageIndex + 1];
-      setSelectedImage(nextImage.url);
-      setCurrentImageIndex(currentImageIndex + 1);
+      const nextIndex = currentImageIndex + 1;
+      setSelectedImage(images[nextIndex]);
+      setCurrentImageIndex(nextIndex);
     } else if (direction === 'prev' && currentImageIndex > 0) {
-      const prevImage = images[currentImageIndex - 1];
-      setSelectedImage(prevImage.url);
-      setCurrentImageIndex(currentImageIndex - 1);
+      const prevIndex = currentImageIndex - 1;
+      setSelectedImage(images[prevIndex]);
+      setCurrentImageIndex(prevIndex);
     }
   };
 
@@ -264,42 +202,13 @@ const App: React.FC = () => {
               </div>
             </div>
             <div className="flex items-center space-x-4">
-              {isAuthenticated ? (
-                <>
-                  <button
-                    onClick={() => setShowSettings(true)}
-                    className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                    aria-label="Open settings"
-                  >
-                    <SettingsIcon sx={{ fontSize: 24 }} />
-                  </button>
-                  <ImageUploader
-                    onImageUpload={handleImageUpload}
-                    showGrid={showGrid}
-                    onToggleGrid={() => setShowGrid(!showGrid)}
-                  >
-                    <div className="relative group">
-                      <button
-                        disabled={isUploading}
-                        className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 disabled:opacity-50"
-                        aria-label="Upload photo"
-                      >
-                        <CloudUpload sx={{ fontSize: 24 }} />
-                      </button>
-                      <div className="absolute hidden group-hover:block -bottom-8 left-1/2 transform -translate-x-1/2 px-2 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap">
-                        Upload Photo
-                      </div>
-                    </div>
-                  </ImageUploader>
-                </>
-              ) : (
-                <button
-                  onClick={() => setShowLogin(true)}
-                  className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
-                >
-                  Login
-                </button>
-              )}
+              <button
+                onClick={() => setShowSettings(true)}
+                className="p-2 text-gray-400 hover:text-white transition-colors"
+                aria-label="Open settings"
+              >
+                <SettingsIcon sx={{ fontSize: 24 }} />
+              </button>
             </div>
           </div>
         </div>
@@ -328,27 +237,20 @@ const App: React.FC = () => {
         )}
       </main>
 
-      <LoginModal
-        isOpen={showLogin}
-        onClose={() => setShowLogin(false)}
-      />
-
       <SettingsModal
         isOpen={showSettings}
         onClose={() => setShowSettings(false)}
         isDark={isDark}
         onToggleTheme={() => setIsDark(!isDark)}
-        onLogout={logout}
       />
 
       {selectedImage && (
         <ImageModal
-          imageUrl={selectedImage}
+          image={selectedImage}
           onClose={() => {
             setSelectedImage(null);
             setCurrentImageIndex(-1);
           }}
-          onDelete={() => handleImageDelete(selectedImage)}
           onNavigate={handleNavigate}
           hasNext={currentImageIndex < images.length - 1}
           hasPrev={currentImageIndex > 0}

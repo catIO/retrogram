@@ -1,19 +1,27 @@
 import React from 'react';
 
+export interface ImageData {
+  id?: string;
+  url: string;
+  crop: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  };
+  scale: number;
+  originalWidth: number;
+  originalHeight: number;
+  takenAt?: string;
+  createdAt?: string;
+  title?: string;
+  description?: string;
+  tags?: string[];
+}
+
 interface ImageGridProps {
-  images: Array<{
-    url: string;
-    crop: {
-      x: number;
-      y: number;
-      width: number;
-      height: number;
-    };
-    scale: number;
-    originalWidth: number;
-    originalHeight: number;
-  }>;
-  onImageClick: (url: string) => void;
+  images: ImageData[];
+  onImageClick: (image: ImageData) => void;
   isLoading: boolean;
 }
 
@@ -22,9 +30,9 @@ const ImageGrid: React.FC<ImageGridProps> = ({ images, onImageClick, isLoading }
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 max-w-7xl mx-auto px-4">
       {images.map((image, index) => (
         <div
-          key={image.url || index}
+          key={image.id || image.url || index}
           className="relative aspect-square bg-gray-200 dark:bg-gray-700 rounded-lg overflow-hidden group cursor-pointer shadow-lg hover:shadow-xl transition-shadow duration-300"
-          onClick={() => onImageClick(image.url)}
+          onClick={() => onImageClick(image)}
         >
           <img
             src={image.url}
